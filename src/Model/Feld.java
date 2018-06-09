@@ -3,6 +3,11 @@ package Model;
 public class Feld {
     private Spieler besitzer;
 
+    public Feld()
+    {
+        this.besitzer = null;
+    }
+
     public Feld(Spieler besitzer)
     {
         this.besitzer = besitzer;

@@ -1,6 +1,7 @@
 package Model;
 
 public class Spielfeld {
+
     private Feld[][] spielFeld;
     private int groesse;
 
@@ -10,27 +11,52 @@ public class Spielfeld {
         spielFeld = new Feld[n][n];
     }
 
-    public boolean spielerKannPlatzieren(Spieler spieler, int zeile, int spalte)
+    private boolean spielerKannPlatzieren(Spieler spieler, int zeile, int spalte)
     {
         Feld zuSetzen = spielFeld[zeile][spalte];
-        if(zuSetzen.getBesitzer().getValue() != 'O')
+        if(zuSetzen.getBesitzer() != null)
             return false;
+
+        /**
+         * Prüfen, ob der Stein andere Steine umschließt
+         * DIAGONAL
+         * VERTIKAL
+         * HORIZONTAL
+         */
+
+        return true;
+    }
+
+    private Feld getBegrenzer(Spieler spieler, int zeile, int spalte)
+    {
+        for(int i = 0; i < groesse; i++)
+        {
+            // Horizontal
+            spielFeld[zeile][i];
+
+            // Vertikal
+            spielFeld[i][spalte];
+        }
+    }
+
+    public boolean setzeStein(Spieler spieler, int zeile, int spalte)
+    {
+        if(spielerKannPlatzieren(spieler, zeile, spalte))
+        {
+            spielFeld[zeile][spalte].setBesitzer(spieler);
+            return true;
+        }
 
         return false;
     }
 
-    public void setzeStein(Spieler spieler, int spalte, int zeile)
-    {
-        spielFeld[zeile][spalte].setBesitzer(spieler);
-    }
-
-    public void initialisiereFeld(Spieler spieler1, Spieler spieler2, Spieler neutral)
+    public void initialisiereFeld(Spieler spieler1, Spieler spieler2)
     {
         for(int i = 0; i < spielFeld.length; i++)
         {
             for(int j = 0; j < spielFeld[i].length; j++)
             {
-                spielFeld[i][j] = new Feld(neutral);
+                spielFeld[i][j] = new Feld();
             }
         }
 
@@ -45,13 +71,28 @@ public class Spielfeld {
 
     public void output()
     {
+
+        String tHead = "";
+        for(int i = 1; i <= groesse; i++)
+        {
+            tHead += "\t" + String.valueOf(i);
+        }
+
+        System.out.println(tHead);
+        int row = 1;
+
         for(Feld[] zeile : spielFeld)
         {
+            String rowContent = String.valueOf(row) + "\t";
             for(Feld feld : zeile)
             {
-                System.out.print(feld.getBesitzer().getValue());
+                if(feld.getBesitzer() != null)
+                    rowContent += feld.getBesitzer().getValue() + "\t";
+                else
+                    rowContent += "O\t";
             }
-            System.out.println();
+            System.out.println(rowContent);
+            row++;
         }
     }
 

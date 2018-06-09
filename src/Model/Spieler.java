@@ -15,4 +15,19 @@ public class Spieler {
         return value;
     }
 
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public int getAnzSteine() {
+        return anzSteine;
+    }
+
+    public void setAnzSteine(int anzSteine) {
+        this.anzSteine = anzSteine;
+    }
 }
