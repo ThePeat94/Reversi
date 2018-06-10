@@ -1,5 +1,7 @@
 package Model;
 
+import Utils.Vektor;
+
 import java.util.Scanner;
 
 public class GameManager {
@@ -34,6 +36,7 @@ public class GameManager {
             System.out.println(aktiverSpieler.getName() + " du bist am Zug.");
             int zeile = -1;
             int spalte = -1;
+            Vektor ziel = new Vektor();
             do
             {
                 if(zeile > -1 && spalte > -1)
@@ -42,11 +45,14 @@ public class GameManager {
                 }
 
                 System.out.println("Setzende Zeile: ");
-                zeile = getNumberInput(0, Integer.MAX_VALUE) - 1;
+                zeile = getNumberInput(0, spielFeld.getGroesse() - 1);
 
                 System.out.println("Setzende Spalte: ");
-                spalte = getNumberInput(0, Integer.MAX_VALUE) - 1;
-            } while(!spielFeld.setzeStein(aktiverSpieler, zeile, spalte));
+                spalte = getNumberInput(0, spielFeld.getGroesse() - 1);
+
+                ziel.setX(spalte);
+                ziel.setY(zeile);
+            } while(!spielFeld.setzeStein(aktiverSpieler, ziel));
 
 
 

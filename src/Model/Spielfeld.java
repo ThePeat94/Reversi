@@ -1,8 +1,14 @@
 package Model;
 
+import Utils.GameRuleException;
+import Utils.Vektor;
+
 public class Spielfeld {
 
     private Feld[][] spielFeld;
+
+
+
     private int groesse;
 
     public Spielfeld(int n)
@@ -11,11 +17,124 @@ public class Spielfeld {
         spielFeld = new Feld[n][n];
     }
 
-    private boolean spielerKannPlatzieren(Spieler spieler, int zeile, int spalte)
+
+    private Vektor[][] erfasseBegrenzendeSteine(Spieler spieler, Vektor zielFeld)
     {
-        Feld zuSetzen = spielFeld[zeile][spalte];
-        if(zuSetzen.getBesitzer() != null)
-            return false;
+        Vektor[][] ergebnis = new Vektor[3][];
+
+        // Horizontale Begrenzer
+        // 0 = Links, 1 = rechts
+        ergebnis[0] = new Vektor[2];
+
+        // Vertikale Begrenzer
+        // 0 = oben, 1 = unten
+        ergebnis[1] = new Vektor[2];
+
+        // Diagonale Begrenzer
+        // 0 = oben links, 1 = oben rechts, 2 = unten rechts, 3 = unten links
+        ergebnis[2] = new Vektor[4];
+
+        int zielZeile = zielFeld.getY();
+        int zielSpalte = zielFeld.getX();
+
+        Vektor[] pruefendeFelder = new Vektor[8];
+
+        for(int i = 1; i < groesse - 2; i++)
+        {
+            // Oben Links
+            pruefendeFelder[0] = new Vektor(zielSpalte - i, zielZeile - i);
+
+            // Oben Mitte
+            pruefendeFelder[1] = new Vektor(zielSpalte, zielZeile - i);
+
+            // Oben Rechts
+            pruefendeFelder[2] = new Vektor(zielSpalte + i, zielZeile - i);
+
+            // Mitte Rechts
+            pruefendeFelder[3] = new Vektor(zielSpalte + i, zielZeile);
+
+            // Unten Rechts
+            pruefendeFelder[4] = new Vektor(zielSpalte + i, zielZeile + i);
+
+            // Unten Mitte
+            pruefendeFelder[5] = new Vektor(zielSpalte, zielZeile + i);
+
+            // Unten Links
+            pruefendeFelder[6] = new Vektor(zielSpalte - i, zielZeile + i);
+
+            // Mitte Links
+            pruefendeFelder[7] = new Vektor(zielSpalte - i, zielZeile);
+
+            for(int j = 0; j < 8; j++)
+            {
+                Vektor aktuellerVektor = pruefendeFelder[j];
+
+                if(aktuellerVektor.getY() < 0 || aktuellerVektor.getX() < 0 || aktuellerVektor.getY() >= groesse || aktuellerVektor.getX() >= groesse)
+                    continue;
+
+                Feld pruefendesFeld = getFeldByVektor(aktuellerVektor);
+
+                if(pruefendesFeld.getBesitzer() == spieler)
+                {
+                    // Stein in Richtung schräg oben links
+                    if(j == 0)
+                    {
+                        if(ergebnis[2][0] != null)
+                            ergebnis[2][0] = aktuellerVektor;
+                    }
+                    // Stein oben
+                    else if(j == 1)
+                    {
+                        if(ergebnis[1][0] == null)
+                            ergebnis[1][0] = aktuellerVektor;
+                    }
+                    // Stein schräg oben rechts
+                    else if(j == 2)
+                    {
+                        if(ergebnis[2][1] == null)
+                            ergebnis[2][1] = aktuellerVektor;
+                    }
+                    // Stein rechts
+                    else if(j == 3)
+                    {
+                        if(ergebnis[0][1] == null)
+                            ergebnis[0][1] = aktuellerVektor;
+                    }
+                    // Stein schräg unten rechts
+                    else if(j == 4)
+                    {
+                        if(ergebnis[2][2] == null)
+                            ergebnis[2][2] = aktuellerVektor;
+                    }
+                    // Stein unten
+                    else if(j == 5)
+                    {
+                        if(ergebnis[1][1] == null)
+                            ergebnis[1][1] = aktuellerVektor;
+                    }
+                    // Stein schräg unten links
+                    else if(j == 6)
+                    {
+                        if(ergebnis[2][3] == null)
+                            ergebnis[2][3] = aktuellerVektor;
+                    }
+                    // Stein links
+                    else if(j == 7)
+                    {
+                        if(ergebnis[0][0] == null)
+                            ergebnis[0][0] = aktuellerVektor;
+                    }
+
+                }
+
+            }
+        }
+
+        return ergebnis;
+    }
+
+    public boolean setzeStein(Spieler spieler, Vektor vektor) throws GameRuleException
+    {
 
         /**
          * Prüfen, ob der Stein andere Steine umschließt
@@ -24,27 +143,92 @@ public class Spielfeld {
          * HORIZONTAL
          */
 
-        return true;
-    }
+        int setzendeZeile = vektor.getY();
+        int setzendeSpalte = vektor.getX();
 
-    private Feld getBegrenzer(Spieler spieler, int zeile, int spalte)
-    {
-        for(int i = 0; i < groesse; i++)
+        // Feld ist leer
+        if(spielFeld[setzendeZeile][setzendeSpalte].getBesitzer() == null )
         {
-            // Horizontal
-            spielFeld[zeile][i];
+            if(neuerSteinLiegtAnGegner(spieler, vektor))
+            {
+                Vektor[][] begrenzendeSteine = erfasseBegrenzendeSteine(spieler, vektor);
 
-            // Vertikal
-            spielFeld[i][spalte];
+
+                System.out.println("Bis zu folgenden Steinen werden nun die Gegner eingeschlossen: ");
+                for(Vektor[] richtung : begrenzendeSteine)
+                {
+                    for(Vektor begrenzer : richtung)
+                    {
+                        if(begrenzer != null) {
+                            System.out.println(begrenzer.toString());
+                        }
+                    }
+                }
+                spielFeld[setzendeZeile][setzendeSpalte].setBesitzer(spieler);
+                return true;
+            }
+            else
+            {
+                throw new GameRuleException("Hier kann kein Stein platziert werden, da er an keinen gegnerischen Stein angrenzt!");
+            }
+        }
+        else
+        {
+            throw new GameRuleException("Dieses Feld ist bereits belegt.");
         }
     }
 
-    public boolean setzeStein(Spieler spieler, int zeile, int spalte)
+    /**
+     * Prüft, pb der zu setzende Stein an einen gegnerischen Stein angrenzt
+     * @param spieler Der Spieler, welcher am Zug ist
+     * @param vektor Das Zielfeld
+     * @return true, wenn ein gegnerischer Stein anliegt, false, wenn nicht
+     */
+    private boolean neuerSteinLiegtAnGegner(Spieler spieler, Vektor vektor)
     {
-        if(spielerKannPlatzieren(spieler, zeile, spalte))
+        int zielZeile = vektor.getY();
+        int zielSpalte = vektor.getX();
+
+        Vektor[] pruefendeFelder = new Vektor[8];
+
+        // Oben Links
+        pruefendeFelder[0] = new Vektor(zielSpalte - 1, zielZeile - 1);
+
+        // Oben Mitte
+        pruefendeFelder[1] = new Vektor(zielSpalte, zielZeile - 1);
+
+        // Oben Rechts
+        pruefendeFelder[2] = new Vektor(zielSpalte + 1, zielZeile - 1);
+
+        // Mitte Rechts
+        pruefendeFelder[3] = new Vektor(zielSpalte + 1, zielZeile);
+
+        // Unten Rechts
+        pruefendeFelder[4] = new Vektor(zielSpalte + 1, zielZeile + 1);
+
+        // Unten Mitte
+        pruefendeFelder[5] = new Vektor(zielSpalte, zielZeile + 1);
+
+        // Unten Links
+        pruefendeFelder[6] = new Vektor(zielSpalte - 1, zielZeile + 1);
+
+        // Mitte Links
+        pruefendeFelder[7] = new Vektor(zielSpalte - 1, zielZeile);
+
+        for(Vektor aktuellerVektor : pruefendeFelder)
         {
-            spielFeld[zeile][spalte].setBesitzer(spieler);
-            return true;
+            if(aktuellerVektor.getY() < 0 || aktuellerVektor.getX() < 0 || aktuellerVektor.getY() >= groesse || aktuellerVektor.getX() >= groesse)
+                continue;
+
+            int pruefendeZeile = aktuellerVektor.getY();
+            int pruefendeSpalte = aktuellerVektor.getX();
+
+            Feld pruefendesFeld = getFeldByVektor(aktuellerVektor);
+
+            if(pruefendesFeld.getBesitzer() != null && pruefendesFeld.getBesitzer() != spieler)
+            {
+                return true;
+            }
         }
 
         return false;
@@ -73,13 +257,14 @@ public class Spielfeld {
     {
 
         String tHead = "";
-        for(int i = 1; i <= groesse; i++)
+        for(int i = 0; i < groesse; i++)
         {
             tHead += "\t" + String.valueOf(i);
         }
 
         System.out.println(tHead);
-        int row = 1;
+
+        int row = 0;
 
         for(Feld[] zeile : spielFeld)
         {
@@ -94,6 +279,15 @@ public class Spielfeld {
             System.out.println(rowContent);
             row++;
         }
+    }
+
+    private Feld getFeldByVektor(Vektor ziel)
+    {
+        return spielFeld[ziel.getY()][ziel.getX()];
+    }
+
+    public int getGroesse() {
+        return groesse;
     }
 
 
