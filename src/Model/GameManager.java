@@ -1,5 +1,6 @@
 package Model;
 
+import Utils.GameRuleException;
 import Utils.Vektor;
 
 import java.util.Scanner;
@@ -30,38 +31,80 @@ public class GameManager {
         spielFeld.initialisiereFeld(spieler1, spieler2);
         spielFeld.output();
 
+        boolean freieFelderVerfuegbar = true;
         Spieler aktiverSpieler = spieler1;
-        while(true)
+        while(freieFelderVerfuegbar)
         {
-            System.out.println(aktiverSpieler.getName() + " du bist am Zug.");
-            int zeile = -1;
-            int spalte = -1;
-            Vektor ziel = new Vektor();
-            do
+            try
             {
-                if(zeile > -1 && spalte > -1)
+                System.out.println(aktiverSpieler.getName() + " du bist am Zug.");
+                int zeile = -1;
+                int spalte = -1;
+                Vektor ziel = new Vektor();
+                boolean spielerKannSetzen = false;
+
+                Feld[][] felder = spielFeld.getSpielFeld();
+
+                for(int idReihe = 0; idReihe < felder.length; idReihe++)
                 {
-                    System.out.println("Der Stein konnte nich gesetzt werden, versuche es erneut!");
+                    Feld[] feldReihe = felder[idReihe];
+
+                    for(int idSpalte = 0; idSpalte < feldReihe.length; idSpalte++)
+                    {
+                        Vektor zielFeld = new Vektor(idSpalte, idReihe);
+                        if(spielFeld.setzeStein(aktiverSpieler, zielFeld, false))
+                        {
+                            spielerKannSetzen = true;
+                        }
+                    }
                 }
 
-                System.out.println("Setzende Zeile: ");
-                zeile = getNumberInput(0, spielFeld.getGroesse() - 1);
+                if(spielerKannSetzen)
+                {
+                    do
+                    {
+                        if(zeile > -1 && spalte > -1)
+                        {
+                            System.out.println("Der Stein konnte nich gesetzt werden, versuche es erneut!");
+                        }
 
-                System.out.println("Setzende Spalte: ");
-                spalte = getNumberInput(0, spielFeld.getGroesse() - 1);
+                        System.out.println("Setzende Zeile: ");
+                        zeile = getNumberInput(0, spielFeld.getGroesse() - 1);
 
-                ziel.setX(spalte);
-                ziel.setY(zeile);
-            } while(!spielFeld.setzeStein(aktiverSpieler, ziel));
+                        System.out.println("Setzende Spalte: ");
+                        spalte = getNumberInput(0, spielFeld.getGroesse() - 1);
+
+                        ziel.setX(spalte);
+                        ziel.setY(zeile);
+                    } while(!spielFeld.setzeStein(aktiverSpieler, ziel, true));
+                }
+                else
+                {
+                    System.out.println(aktiverSpieler.getName() + " kann nicht setzen. Sorry.");
+                }
 
 
+                if(aktiverSpieler == spieler1)
+                    aktiverSpieler = spieler2;
+                else if(aktiverSpieler == spieler2)
+                    aktiverSpieler = spieler1;
 
-            if(aktiverSpieler == spieler1)
-                aktiverSpieler = spieler2;
-            else if(aktiverSpieler == spieler2)
-                aktiverSpieler = spieler1;
-
-            spielFeld.output();
+                spielFeld.output();
+                if(spielFeld.getFreieFelder() <= 0)
+                {
+                    freieFelderVerfuegbar = false;
+                }
+            }
+            catch(GameRuleException gEx)
+            {
+                System.out.println("Die Spielregeln wurden verletzt!");
+                System.out.println(gEx.getMessage());
+            }
+            catch(Exception ex)
+            {
+                System.out.println("Ein unerwarteter Fehler ist aufgetreten.");
+                System.out.println(ex.getMessage());
+            }
         }
 
 

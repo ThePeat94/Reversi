@@ -44,7 +44,7 @@ public class Vektor {
     {
         Vektor distanzVektor = new Vektor();
         distanzVektor.setX(ziel.x - this.x);
-        distanzVektor.setX(ziel.y - this.y);
+        distanzVektor.setY(ziel.y - this.y);
 
         return distanzVektor;
     }

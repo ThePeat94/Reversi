@@ -5,17 +5,34 @@ import Utils.Vektor;
 
 public class Spielfeld {
 
+
+
+    public void setSpielFeld(Feld[][] spielFeld) {
+        this.spielFeld = spielFeld;
+    }
+
     private Feld[][] spielFeld;
 
 
-
+    private int freieFelder;
     private int groesse;
 
     public Spielfeld(int n)
     {
         groesse = n;
         spielFeld = new Feld[n][n];
+        freieFelder = n*n;
     }
+
+
+    public int getFreieFelder() {
+        return freieFelder;
+    }
+
+    public Feld[][] getSpielFeld() {
+        return spielFeld;
+    }
+
 
 
     private Vektor[][] erfasseBegrenzendeSteine(Spieler spieler, Vektor zielFeld)
@@ -79,7 +96,7 @@ public class Spielfeld {
                     // Stein in Richtung schräg oben links
                     if(j == 0)
                     {
-                        if(ergebnis[2][0] != null)
+                        if(ergebnis[2][0] == null)
                             ergebnis[2][0] = aktuellerVektor;
                     }
                     // Stein oben
@@ -133,7 +150,7 @@ public class Spielfeld {
         return ergebnis;
     }
 
-    public boolean setzeStein(Spieler spieler, Vektor vektor) throws GameRuleException
+    public boolean setzeStein(Spieler spieler, Vektor vektor, boolean steinSollGesetztWerden) throws GameRuleException
     {
 
         /**
@@ -151,30 +168,179 @@ public class Spielfeld {
         {
             if(neuerSteinLiegtAnGegner(spieler, vektor))
             {
+                // [0] Horizontale Begrenzer
+                // 0 = Links, 1 = rechts
+                // [1] Vertikale Begrenzer
+                // 0 = oben, 1 = unten
+                // [2]Diagonale Begrenzer
+                // 0 = oben links, 1 = oben rechts, 2 = unten rechts, 3 = unten links
                 Vektor[][] begrenzendeSteine = erfasseBegrenzendeSteine(spieler, vektor);
+                begrenzendeSteine = fuelleBegrenzerAuf(vektor, begrenzendeSteine);
 
-
-                System.out.println("Bis zu folgenden Steinen werden nun die Gegner eingeschlossen: ");
-                for(Vektor[] richtung : begrenzendeSteine)
+                if(pruefeDistanz(vektor, begrenzendeSteine))
                 {
-                    for(Vektor begrenzer : richtung)
+                    // Stein soll nicht gesetzt werden, wenn die Methode genutzt wird,
+                    // um zu prüfen, ob der Spieler irgendwo setzen kann
+                    if(steinSollGesetztWerden)
                     {
-                        if(begrenzer != null) {
-                            System.out.println(begrenzer.toString());
-                        }
+                        dreheSteineAufHorizontalerAchseUm(spieler, begrenzendeSteine[0]);
+                        dreheSteineAufVertikalerchseUm(spieler, begrenzendeSteine[1]);
+                        dreheSteineAufDiagonalerchseUm(spieler, begrenzendeSteine[2]);
+                        spielFeld[vektor.getY()][vektor.getX()].setBesitzer(spieler);
+                        freieFelder--;
+                    }
+                    return true;
+                }
+                else
+                {
+                    if(steinSollGesetztWerden)
+                    {
+                        throw new GameRuleException("Durch das Setzen dieses Steines wird kein gegnerischer Stein durch eigene eingeschlossen.");
+                    }
+                    else
+                    {
+                        return false;
                     }
                 }
-                spielFeld[setzendeZeile][setzendeSpalte].setBesitzer(spieler);
-                return true;
+
             }
             else
             {
-                throw new GameRuleException("Hier kann kein Stein platziert werden, da er an keinen gegnerischen Stein angrenzt!");
+                if(steinSollGesetztWerden)
+                {
+                    throw new GameRuleException("Hier kann kein Stein platziert werden, da er an keinen gegnerischen Stein angrenzt!");
+                }
+                else
+                {
+                    return false;
+                }
+
             }
         }
         else
         {
-            throw new GameRuleException("Dieses Feld ist bereits belegt.");
+            if(steinSollGesetztWerden)
+            {
+                throw new GameRuleException("Dieses Feld ist bereits belegt.");
+            }
+            else
+            {
+                return false;
+            }
+        }
+    }
+
+    private boolean pruefeDistanz(Vektor ziel, Vektor[][] begrenzendeSteine)
+    {
+        for(Vektor[] richtung : begrenzendeSteine)
+        {
+            for(Vektor begrenzer : richtung)
+            {
+                Vektor distanz = ziel.distanzVektorZu(begrenzer);
+                if(Math.abs(distanz.getX()) >= 2 || Math.abs(distanz.getY()) >= 2)
+                    return true;
+            }
+        }
+        return false;
+    }
+
+    private Vektor[][] fuelleBegrenzerAuf(Vektor zielVektor, Vektor[][] begrenzer)
+    {
+        Vektor[][] result = begrenzer;
+        for(int i = 0; i < begrenzer.length; i++)
+        {
+            for(int j = 0; j < begrenzer[i].length; j++)
+            {
+                if(result[i][j] == null)
+                    result[i][j] = zielVektor;
+            }
+        }
+        return result;
+    }
+
+    private void dreheSteineAufHorizontalerAchseUm(Spieler neuerBesitzer, Vektor[] begrenzer)
+    {
+        // Horizontale Begrenzer
+        // 0 = Links, 1 = rechts
+        Vektor links = begrenzer[0];
+        Vektor rechts = begrenzer[1];
+
+        int zeile = links.getY();
+
+        for(int spalte = links.getX(); spalte < rechts.getX(); spalte++)
+        {
+            Spieler aktuellerBesitzer = spielFeld[zeile][spalte].getBesitzer();
+            if(aktuellerBesitzer != null && aktuellerBesitzer != neuerBesitzer)
+            {
+                aktuellerBesitzer.setAnzSteine(aktuellerBesitzer.getAnzSteine() - 1);
+                spielFeld[zeile][spalte].setBesitzer(neuerBesitzer);
+                neuerBesitzer.setAnzSteine(neuerBesitzer.getAnzSteine() + 1);
+            }
+
+        }
+    }
+
+    private void dreheSteineAufVertikalerchseUm(Spieler neuerBesitzer, Vektor[] begrenzer)
+    {
+        // [1] Vertikale Begrenzer
+        // 0 = oben, 1 = unten
+        Vektor oben = begrenzer[0];
+        Vektor unten = begrenzer[1];
+
+        int spalte = oben.getX();
+
+        for(int zeile = oben.getY(); zeile < unten.getY(); zeile++)
+        {
+            Spieler aktuellerBesitzer = spielFeld[zeile][spalte].getBesitzer();
+            if(aktuellerBesitzer != null && aktuellerBesitzer != neuerBesitzer)
+            {
+                aktuellerBesitzer.setAnzSteine(aktuellerBesitzer.getAnzSteine() - 1);
+                spielFeld[zeile][spalte].setBesitzer(neuerBesitzer);
+                neuerBesitzer.setAnzSteine(neuerBesitzer.getAnzSteine() + 1);
+            }
+        }
+    }
+
+
+    private void dreheSteineAufDiagonalerchseUm(Spieler neuerBesitzer, Vektor[] begrenzer)
+    {
+        // [2]Diagonale Begrenzer
+        // 0 = oben links, 1 = oben rechts, 2 = unten rechts, 3 = unten links
+        Vektor obenLinks = begrenzer[0];
+        Vektor untenRechts = begrenzer[2];
+
+        Vektor obenRechts = begrenzer[1];
+        Vektor untenLinks = begrenzer[3];
+
+        // von links oben nach rechts unten
+        int schritte = untenRechts.getX() - obenLinks.getX();
+
+        for(int i = 0; i < schritte; i++)
+        {
+            Spieler aktuellerBesitzer = spielFeld[obenLinks.getY() + i][obenLinks.getX() + i].getBesitzer();
+
+            if(aktuellerBesitzer != null && aktuellerBesitzer != neuerBesitzer)
+            {
+                aktuellerBesitzer.setAnzSteine(aktuellerBesitzer.getAnzSteine() - 1);
+                spielFeld[obenLinks.getY() + i][obenLinks.getX() + i].setBesitzer(neuerBesitzer);
+                neuerBesitzer.setAnzSteine(neuerBesitzer.getAnzSteine() + 1);
+            }
+        }
+
+        // von unten links nach oben rechts
+
+        // von links unten nach rechts oben
+        schritte = obenRechts.getX() - untenLinks.getX();
+
+        for(int i = 0; i < schritte; i++)
+        {
+            Spieler aktuellerBesitzer = spielFeld[untenLinks.getY() - i][untenLinks.getX() + i].getBesitzer();
+            if(aktuellerBesitzer != null && aktuellerBesitzer != neuerBesitzer)
+            {
+                aktuellerBesitzer.setAnzSteine(aktuellerBesitzer.getAnzSteine() - 1);
+                spielFeld[untenLinks.getY() - i][untenLinks.getX() + i].setBesitzer(neuerBesitzer);
+                neuerBesitzer.setAnzSteine(neuerBesitzer.getAnzSteine() + 1);
+            }
         }
     }
 
