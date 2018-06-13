@@ -55,6 +55,7 @@ public class GameManager {
                         if(spielFeld.setzeStein(aktiverSpieler, zielFeld, false))
                         {
                             spielerKannSetzen = true;
+                            break;
                         }
                     }
                 }

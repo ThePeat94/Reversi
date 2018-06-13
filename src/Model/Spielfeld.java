@@ -91,58 +91,80 @@ public class Spielfeld {
 
                 Feld pruefendesFeld = getFeldByVektor(aktuellerVektor);
 
-                if(pruefendesFeld.getBesitzer() == spieler)
+                // Stein in Richtung schräg oben links
+                if(j == 0)
                 {
-                    // Stein in Richtung schräg oben links
-                    if(j == 0)
-                    {
-                        if(ergebnis[2][0] == null)
-                            ergebnis[2][0] = aktuellerVektor;
-                    }
-                    // Stein oben
-                    else if(j == 1)
-                    {
-                        if(ergebnis[1][0] == null)
-                            ergebnis[1][0] = aktuellerVektor;
-                    }
-                    // Stein schräg oben rechts
-                    else if(j == 2)
-                    {
-                        if(ergebnis[2][1] == null)
-                            ergebnis[2][1] = aktuellerVektor;
-                    }
-                    // Stein rechts
-                    else if(j == 3)
-                    {
-                        if(ergebnis[0][1] == null)
-                            ergebnis[0][1] = aktuellerVektor;
-                    }
-                    // Stein schräg unten rechts
-                    else if(j == 4)
-                    {
-                        if(ergebnis[2][2] == null)
-                            ergebnis[2][2] = aktuellerVektor;
-                    }
-                    // Stein unten
-                    else if(j == 5)
-                    {
-                        if(ergebnis[1][1] == null)
-                            ergebnis[1][1] = aktuellerVektor;
-                    }
-                    // Stein schräg unten links
-                    else if(j == 6)
-                    {
-                        if(ergebnis[2][3] == null)
-                            ergebnis[2][3] = aktuellerVektor;
-                    }
-                    // Stein links
-                    else if(j == 7)
-                    {
-                        if(ergebnis[0][0] == null)
-                            ergebnis[0][0] = aktuellerVektor;
-                    }
+                    if(ergebnis[2][0] == null && pruefendesFeld.getBesitzer() == null)
+                        ergebnis[2][0] = zielFeld;
 
+                    if(ergebnis[2][0] == null && pruefendesFeld.getBesitzer() == spieler)
+                        ergebnis[2][0] = aktuellerVektor;
                 }
+                // Stein oben
+                else if(j == 1)
+                {
+                    if(ergebnis[1][0] == null && pruefendesFeld.getBesitzer() == null)
+                        ergebnis[1][0] = zielFeld;
+
+                    if(ergebnis[1][0] == null && pruefendesFeld.getBesitzer() == spieler)
+                        ergebnis[1][0] = aktuellerVektor;
+                }
+                // Stein schräg oben rechts
+                else if(j == 2)
+                {
+                    if(ergebnis[2][1] == null && pruefendesFeld.getBesitzer() == null)
+                        ergebnis[2][1] = zielFeld;
+
+                    if(ergebnis[2][1] == null && pruefendesFeld.getBesitzer() == spieler)
+                        ergebnis[2][1] = aktuellerVektor;
+                }
+                // Stein rechts
+                else if(j == 3)
+                {
+                    if(ergebnis[0][1] == null && pruefendesFeld.getBesitzer() == null)
+                        ergebnis[0][1] = zielFeld;
+
+                    if(ergebnis[0][1] == null && pruefendesFeld.getBesitzer() == spieler)
+                        ergebnis[0][1] = aktuellerVektor;
+                }
+                // Stein schräg unten rechts
+                else if(j == 4)
+                {
+                    if(ergebnis[2][2] == null && pruefendesFeld.getBesitzer() == null)
+                        ergebnis[2][2] = zielFeld;
+
+                    if(ergebnis[2][2] == null && pruefendesFeld.getBesitzer() == spieler)
+                        ergebnis[2][2] = aktuellerVektor;
+                }
+                // Stein unten
+                else if(j == 5)
+                {
+                    if(ergebnis[1][1] == null && pruefendesFeld.getBesitzer() == null)
+                        ergebnis[1][1] = zielFeld;
+
+                    if(ergebnis[1][1] == null && pruefendesFeld.getBesitzer() == spieler)
+                        ergebnis[1][1] = aktuellerVektor;
+                }
+                // Stein schräg unten links
+                else if(j == 6)
+                {
+                    if(ergebnis[2][3] == null && pruefendesFeld.getBesitzer() == null)
+                        ergebnis[2][3] = 8;
+
+                    if(ergebnis[2][3] == null && pruefendesFeld.getBesitzer() == spieler)
+                        ergebnis[2][3] = aktuellerVektor;
+                }
+                // Stein links
+                else if(j == 7)
+                {
+                    if(ergebnis[0][0] == null && pruefendesFeld.getBesitzer() == null)
+                        ergebnis[0][0] = zielFeld;
+
+                    if(ergebnis[0][0] == null && pruefendesFeld.getBesitzer() == spieler)
+                        ergebnis[0][0] = aktuellerVektor;
+                }
+
+
 
             }
         }
