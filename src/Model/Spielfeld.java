@@ -149,7 +149,7 @@ public class Spielfeld {
                 else if(j == 6)
                 {
                     if(ergebnis[2][3] == null && pruefendesFeld.getBesitzer() == null)
-                        ergebnis[2][3] = 8;
+                        ergebnis[2][3] = zielFeld;
 
                     if(ergebnis[2][3] == null && pruefendesFeld.getBesitzer() == spieler)
                         ergebnis[2][3] = aktuellerVektor;

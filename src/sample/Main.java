@@ -15,19 +15,23 @@ public class Main extends Application {
 
     @Override
     public void start(Stage primaryStage) throws Exception{
-        GameManager gm = new GameManager();
+        //GameManager gm = new GameManager();
 
 
-        System.out.println("Geben sie die Groesse des Spielfelds an!");
+        //System.out.println("Geben sie die Groesse des Spielfelds an!");
 
-        int n = getNumberInput(6, 10);
+        //int n = getNumberInput(6, 10);
 
-        gm.StartNewGame(n);
+        //gm.StartNewGame(n);
 
 
         Parent root = FXMLLoader.load(getClass().getResource("sample.fxml"));
         primaryStage.setTitle("Hello World");
-        primaryStage.setScene(new Scene(root, 300, 275));
+        primaryStage.setScene(new Scene(root));
+        primaryStage.setMinHeight(900);
+        primaryStage.setMinWidth(800);
+        primaryStage.setMaxHeight(900);
+        primaryStage.setMaxWidth(800);
         primaryStage.show();
     }
 
