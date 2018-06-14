@@ -3,6 +3,9 @@ package sample;
 import Model.Feld;
 import Model.Spieler;
 import Model.Spielfeld;
+import Utils.GameRuleException;
+import Utils.Vektor;
+import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.scene.Node;
 import javafx.scene.control.Label;
@@ -14,6 +17,7 @@ import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.GridPane;
 
 import java.text.ParseException;
+import java.util.ArrayList;
 import java.util.InputMismatchException;
 import java.util.Optional;
 
@@ -21,16 +25,25 @@ import java.util.Optional;
 public class Controller {
     public GridPane gpSpielFeld;
     public BorderPane dpMain;
+    public Label lbStatusText;
 
 
     Image feldImage = new Image("file:.\\Resources\\feld.png");
     Image weissImage = new Image("file:.\\Resources\\weiß.png");
     Image schwarzImage = new Image("file:.\\Resources\\schwarz.png");
+    Image verfuegbarImage = new Image("file:.\\Resources\\setzbar.png");
 
     Spielfeld spielFeld;
 
     Spieler spieler1;
     Spieler spieler2;
+    Spieler aktiverSpieler;
+
+    double feldWeite;
+    double feldHoehe;
+
+    final int GRID_WIDTH = 720;
+    final int GRID_HEIGHT = 720;
 
     public void initialize()
     {
@@ -87,48 +100,12 @@ public class Controller {
         spielFeld.initialisiereFeld(spieler1, spieler2);
 
         // 4. Grafische Darstellung
-        Feld[][] felder = spielFeld.getSpielFeld();
-        GridPane newGp = new GridPane();
-        newGp.minHeightProperty().setValue(695);
-        newGp.maxHeightProperty().setValue(695);
 
-        newGp.minWidthProperty().setValue(720);
-        newGp.maxWidthProperty().setValue(720);
+        feldWeite = GRID_WIDTH/n;
+        feldHoehe = GRID_HEIGHT/n;
+        aktiverSpieler = spieler1;
+        renderSpielFeld();
 
-        gpSpielFeld.setHgap(0);
-        gpSpielFeld.setVgap(0);
-        for(int i = 0; i < felder.length; i++)
-        {
-            Feld[] reihe = felder[i];
-            for(int j = 0; j < reihe.length; j++)
-            {
-                ImageView iv = new ImageView();
-                iv.setImage(feldImage);
-                iv.setFitHeight(720/n);
-                iv.setFitWidth(695/n);
-                gpSpielFeld.add(iv, j, i);
-
-                ImageView ivBesitzer = null;
-
-                if(reihe[j].getBesitzer() == spieler1)
-                {
-                    ivBesitzer = new ImageView();
-                    ivBesitzer.setImage(weissImage);
-                }
-                else if(reihe[j].getBesitzer() == spieler2)
-                {
-                    ivBesitzer = new ImageView();
-                    ivBesitzer.setImage(schwarzImage);
-                }
-
-                if(ivBesitzer != null)
-                {
-                    ivBesitzer.setFitHeight(720/n);
-                    ivBesitzer.setFitWidth(695/n);
-                    gpSpielFeld.add(ivBesitzer, j, i);
-                }
-            }
-        }
     }
 
     private int getNumberFromString(int min, int max, String toParse) throws Exception
@@ -150,9 +127,136 @@ public class Controller {
         return textInputDialog.showAndWait();
     }
 
-    @FXML
-    private void mouseEntered(MouseEvent e) {
-        e.getX();
-        e.getY();
+    private void aktiverSpielerSetztStein(Vektor gridZiel)
+    {
+        int feldZeile = (int) (gridZiel.getY()/feldHoehe);
+        int feldSpalte = (int) (gridZiel.getX()/feldWeite);
+
+        Vektor zielFeld = new Vektor(feldSpalte, feldZeile);
+
+        lbStatusText.setText(String.format("Zielfeld: %s", zielFeld));
+
+        try
+        {
+            if(spielFeld.setzeStein(aktiverSpieler, zielFeld, true))
+            {
+                if(aktiverSpieler == spieler1)
+                    aktiverSpieler = spieler2;
+                else if(aktiverSpieler == spieler2)
+                    aktiverSpieler = spieler1;
+                renderSpielFeld();
+            }
+        }
+        catch(GameRuleException gEx)
+        {
+
+        }
+    }
+
+    private ArrayList<Vektor> ermittleVerfuegbareFelderFuerSpieler()
+    {
+       ArrayList<Vektor> ergebnis = new ArrayList<Vektor>();
+       Feld[][] felder = spielFeld.getSpielFeld();
+       try
+       {
+           for(int i = 0; i < felder.length; i++)
+           {
+               Feld[] reihe = felder[i];
+               for(int j = 0; j < reihe.length; j++)
+               {
+                   Feld feld = reihe[j];
+                   Vektor zielFeld = new Vektor(j, i);
+                   if(feld.getBesitzer() == null && spielFeld.setzeStein(aktiverSpieler, zielFeld, false))
+                   {
+                       ergebnis.add(zielFeld);
+                   }
+               }
+           }
+       }
+       catch(Exception ex)
+       {
+
+       }
+
+       return ergebnis;
+    }
+
+    private void renderSpielFeld()
+    {
+        Feld[][] felder = spielFeld.getSpielFeld();
+        gpSpielFeld= new GridPane();
+        gpSpielFeld.setMinHeight(GRID_HEIGHT);
+        gpSpielFeld.setMaxHeight(GRID_HEIGHT);
+
+        gpSpielFeld.setMinWidth(GRID_WIDTH);
+        gpSpielFeld.setMaxWidth(GRID_WIDTH);
+
+        gpSpielFeld.setPrefWidth(GRID_WIDTH);
+        gpSpielFeld.setPrefHeight(GRID_HEIGHT);
+
+        ArrayList<Vektor> verfuegbareFelder = ermittleVerfuegbareFelderFuerSpieler();
+
+        for(int i = 0; i < felder.length; i++)
+        {
+            Feld[] reihe = felder[i];
+            for(int j = 0; j < reihe.length; j++)
+            {
+                ImageView iv = new ImageView();
+                iv.setImage(feldImage);
+                iv.setFitHeight(feldHoehe);
+                iv.setFitWidth(feldWeite);
+
+                gpSpielFeld.add(iv, j, i);
+
+                ImageView ivBesitzer = null;
+
+                if(reihe[j].getBesitzer() == spieler1)
+                {
+                    ivBesitzer = new ImageView();
+                    ivBesitzer.setImage(weissImage);
+                }
+                else if(reihe[j].getBesitzer() == spieler2)
+                {
+                    ivBesitzer = new ImageView();
+                    ivBesitzer.setImage(schwarzImage);
+                }
+
+                if(ivBesitzer != null)
+                {
+                    ivBesitzer.setFitHeight(GRID_HEIGHT/spielFeld.getGroesse());
+                    ivBesitzer.setFitWidth(GRID_WIDTH/spielFeld.getGroesse());
+                    gpSpielFeld.add(ivBesitzer, j, i);
+                }
+            }
+        }
+
+        for(Vektor verfuegbar : verfuegbareFelder)
+        {
+            ImageView ivVerfuegbar = new ImageView();
+            ivVerfuegbar.setImage(verfuegbarImage);
+            ivVerfuegbar.setFitHeight(GRID_HEIGHT/spielFeld.getGroesse());
+            ivVerfuegbar.setFitWidth(GRID_WIDTH/spielFeld.getGroesse());
+            gpSpielFeld.add(ivVerfuegbar, verfuegbar.getX(), verfuegbar.getY());
+
+        }
+
+        dpMain.setCenter(gpSpielFeld);
+        EventHandler<MouseEvent> clickHandler = new EventHandler<MouseEvent>() {
+            @Override
+            public void handle(MouseEvent event) {
+                Vektor gridZiel = new Vektor((int) event.getX(), (int) event.getY());
+                aktiverSpielerSetztStein(gridZiel);
+            }
+        };
+        gpSpielFeld.setOnMouseClicked(clickHandler);
+    }
+
+    private Node getNodeFromGridPane(GridPane gridPane, int col, int row) {
+        for (Node node : gridPane.getChildren()) {
+            if (GridPane.getColumnIndex(node) == col && GridPane.getRowIndex(node) == row) {
+                return node;
+            }
+        }
+        return null;
     }
 }
