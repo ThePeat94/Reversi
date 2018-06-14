@@ -209,6 +209,7 @@ public class Spielfeld {
                         dreheSteineAufVertikalerchseUm(spieler, begrenzendeSteine[1]);
                         dreheSteineAufDiagonalerchseUm(spieler, begrenzendeSteine[2]);
                         spielFeld[vektor.getY()][vektor.getX()].setBesitzer(spieler);
+                        spieler.setAnzSteine(spieler.getAnzSteine() + 1);
                         freieFelder--;
                     }
                     return true;
@@ -438,6 +439,9 @@ public class Spielfeld {
         spielFeld[mitte-1][mitte-1].setBesitzer(spieler1);
         spielFeld[mitte-1][mitte].setBesitzer(spieler2);
         spielFeld[mitte][mitte-1].setBesitzer(spieler2);
+
+        spieler1.setAnzSteine(2);
+        spieler2.setAnzSteine(2);
 
     }
 

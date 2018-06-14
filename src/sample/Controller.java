@@ -5,9 +5,11 @@ import Model.Spieler;
 import Model.Spielfeld;
 import Utils.GameRuleException;
 import Utils.Vektor;
+import javafx.application.Application;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.scene.Node;
+import javafx.scene.control.Alert;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextInputDialog;
 import javafx.scene.image.Image;
@@ -26,24 +28,31 @@ public class Controller {
     public GridPane gpSpielFeld;
     public BorderPane dpMain;
     public Label lbStatusText;
+    public Label lbSpieler1Name;
+    public Label lbSpieler1Steine;
+    public Label lbSpieler2Steine;
+    public Label lbSpieler2Name;
 
 
-    Image feldImage = new Image("file:.\\Resources\\feld.png");
-    Image weissImage = new Image("file:.\\Resources\\weiß.png");
-    Image schwarzImage = new Image("file:.\\Resources\\schwarz.png");
-    Image verfuegbarImage = new Image("file:.\\Resources\\setzbar.png");
+    private Image feldImage = new Image("file:.\\Resources\\feld.png");
+    private Image weissImage = new Image("file:.\\Resources\\weiß.png");
+    private Image schwarzImage = new Image("file:.\\Resources\\schwarz.png");
+    private Image verfuegbarImage = new Image("file:.\\Resources\\setzbar.png");
 
-    Spielfeld spielFeld;
+    private Spielfeld spielFeld;
 
-    Spieler spieler1;
-    Spieler spieler2;
-    Spieler aktiverSpieler;
+    private Spieler spieler1;
+    private Spieler spieler2;
+    private Spieler aktiverSpieler;
 
-    double feldWeite;
-    double feldHoehe;
+    private double feldWeite;
+    private double feldHoehe;
 
-    final int GRID_WIDTH = 720;
-    final int GRID_HEIGHT = 720;
+    private final int GRID_WIDTH = 720;
+    private final int GRID_HEIGHT = 720;
+
+    private final String ACTIVE_STYLE = "-fx-background-color: tomato";
+    private final String INACTIVE_STYLE = "-fx-background-color: transparent";
 
     public void initialize()
     {
@@ -52,48 +61,16 @@ public class Controller {
 
     public void startNewGame()
     {
-        int n = 0;
-        do {
-            // 1. Eingabe der Groesse des Spielfelds
-            Optional<String> result = inputDialog("Spielfeld initialisieren", "Geben Sie die Größe des Spielfeldes an. Mindestens 6, maximal 10!", "Größe: ");
-            if(result.isPresent())
-            {
-                try
-                {
-                    n = getNumberFromString(6, 10, result.get());
-                }
-                catch(Exception ex)
-                {
-
-                }
-            }
-
-        } while(n == 0);
+        int n = spielfeldGroesseInput();
 
         // 2. Eingabe der Spielernamen
-        String spieler1Name = "";
+        spieler1 = new Spieler('W');
+        spieler2 = new Spieler('S');
+        erfasseSpielerName(spieler1, 1);
+        erfasseSpielerName(spieler2, 2);
+        lbSpieler1Name.setText(spieler1.getName());
+        lbSpieler2Name.setText(spieler2.getName());
 
-        do
-        {
-            Optional<String> nameResult = inputDialog("Spieler 1 Name", "Geben Sie den Namen des 1. Spieler an", "Name: ");
-            if(nameResult.isPresent())
-                spieler1Name = nameResult.get();
-        }while(spieler1Name.isEmpty());
-
-        spieler1 = new Spieler('S');
-        spieler1.setName(spieler1Name);
-
-        String spieler2Name = "";
-
-        do
-        {
-            Optional<String> nameResult = inputDialog("Spieler 2 Name", "Geben Sie den Namen des 2. Spieler an", "Name: ");
-            if(nameResult.isPresent())
-                spieler2Name = nameResult.get();
-        }while(spieler2Name.isEmpty());
-
-        spieler2 = new Spieler('W');
-        spieler2.setName(spieler1Name);
 
         // 3. Erstellen des Feldes
         spielFeld = new Spielfeld(n);
@@ -104,8 +81,22 @@ public class Controller {
         feldWeite = GRID_WIDTH/n;
         feldHoehe = GRID_HEIGHT/n;
         aktiverSpieler = spieler1;
+        lbSpieler1Name.setStyle(ACTIVE_STYLE);
         renderSpielFeld();
 
+    }
+
+    private void erfasseSpielerName(Spieler zielSpieler, int spielerZahl)
+    {
+        String spielerName = "";
+
+        do
+        {
+            Optional<String> nameResult = inputDialog("Spieler " + String.valueOf(spielerZahl) + " Name", "Geben Sie den Namen des " + String.valueOf(spielerZahl) + ". Spieler an", "Name: ");
+            if(nameResult.isPresent())
+                spielerName = nameResult.get();
+        }while(spielerName.isEmpty());
+        zielSpieler.setName(spielerName);
     }
 
     private int getNumberFromString(int min, int max, String toParse) throws Exception
@@ -141,19 +132,53 @@ public class Controller {
             if(spielFeld.setzeStein(aktiverSpieler, zielFeld, true))
             {
                 if(aktiverSpieler == spieler1)
-                    aktiverSpieler = spieler2;
+                {
+                    if(ermittleVerfuegbareFelderFuerSpieler(spieler2).size() > 0)
+                    {
+                        aktiverSpieler = spieler2;
+                        lbSpieler2Name.setStyle(ACTIVE_STYLE);
+                        lbSpieler1Name.setStyle(INACTIVE_STYLE);
+                    }
+                }
                 else if(aktiverSpieler == spieler2)
-                    aktiverSpieler = spieler1;
+                {
+                    if(ermittleVerfuegbareFelderFuerSpieler(spieler1).size() > 0)
+                    {
+                        aktiverSpieler = spieler1;
+                        lbSpieler1Name.setStyle(ACTIVE_STYLE);
+                        lbSpieler2Name.setStyle(INACTIVE_STYLE);
+                    }
+                }
                 renderSpielFeld();
             }
         }
         catch(GameRuleException gEx)
         {
+            lbStatusText.setText(gEx.getMessage());
+        }
+
+        if(spielFeld.getFreieFelder() == 0)
+        {
+            Spieler sieger = null;
+            if(spieler1.getAnzSteine() > spieler2.getAnzSteine())
+                sieger = spieler1;
+
+            if(spieler2.getAnzSteine() > spieler1.getAnzSteine())
+                sieger = spieler2;
+
+            if(sieger != null)
+            {
+                displayMessage(Alert.AlertType.INFORMATION, "Spielende", "Alle Felder sind belegt", sieger.getName() + " hat gewonnen.");
+            }
+            else
+            {
+                displayMessage(Alert.AlertType.INFORMATION, "Spielende", "Alle Felder sind belegt", "Unentschieden, beide Spieler haben gleich viel Steine auf dem Feld!");
+            }
 
         }
     }
 
-    private ArrayList<Vektor> ermittleVerfuegbareFelderFuerSpieler()
+    private ArrayList<Vektor> ermittleVerfuegbareFelderFuerSpieler(Spieler spieler)
     {
        ArrayList<Vektor> ergebnis = new ArrayList<Vektor>();
        Feld[][] felder = spielFeld.getSpielFeld();
@@ -166,7 +191,7 @@ public class Controller {
                {
                    Feld feld = reihe[j];
                    Vektor zielFeld = new Vektor(j, i);
-                   if(feld.getBesitzer() == null && spielFeld.setzeStein(aktiverSpieler, zielFeld, false))
+                   if(feld.getBesitzer() == null && spielFeld.setzeStein(spieler, zielFeld, false))
                    {
                        ergebnis.add(zielFeld);
                    }
@@ -194,7 +219,7 @@ public class Controller {
         gpSpielFeld.setPrefWidth(GRID_WIDTH);
         gpSpielFeld.setPrefHeight(GRID_HEIGHT);
 
-        ArrayList<Vektor> verfuegbareFelder = ermittleVerfuegbareFelderFuerSpieler();
+        ArrayList<Vektor> verfuegbareFelder = ermittleVerfuegbareFelderFuerSpieler(aktiverSpieler);
 
         for(int i = 0; i < felder.length; i++)
         {
@@ -228,6 +253,8 @@ public class Controller {
                     gpSpielFeld.add(ivBesitzer, j, i);
                 }
             }
+            lbSpieler1Steine.setText(String.valueOf(spieler1.getAnzSteine()));
+            lbSpieler2Steine.setText(String.valueOf(spieler2.getAnzSteine()));
         }
 
         for(Vektor verfuegbar : verfuegbareFelder)
@@ -251,12 +278,45 @@ public class Controller {
         gpSpielFeld.setOnMouseClicked(clickHandler);
     }
 
-    private Node getNodeFromGridPane(GridPane gridPane, int col, int row) {
-        for (Node node : gridPane.getChildren()) {
-            if (GridPane.getColumnIndex(node) == col && GridPane.getRowIndex(node) == row) {
-                return node;
+    private int spielfeldGroesseInput()
+    {
+        int n = 0;
+        boolean erneutAuffordern = true;
+
+        while(erneutAuffordern)
+        {
+            // 1. Eingabe der Groesse des Spielfelds
+            Optional<String> result = inputDialog("Spielfeld initialisieren", "Geben Sie die Größe des Spielfeldes an. Mindestens 6, maximal 10!", "Größe: ");
+
+            if(result.isPresent())
+            {
+                try
+                {
+                    n = getNumberFromString(6, 10, result.get());
+                    erneutAuffordern = false;
+                }
+                catch(Exception ex)
+                {
+                    displayMessage(Alert.AlertType.ERROR, "Fehler aufgetrten", "Es ist ein unerwarteter Fehler aufgetrten!",
+                            ex.getMessage());
+                }
             }
+            else
+            {
+                System.exit(0);
+            }
+
         }
-        return null;
+
+        return n;
+    }
+
+    private void displayMessage(Alert.AlertType alertType, String title, String headerText, String contentText)
+    {
+        Alert alert = new Alert(alertType);
+        alert.setTitle(title);
+        alert.setHeaderText(headerText);
+        alert.setContentText(contentText);
+        alert.showAndWait();
     }
 }
