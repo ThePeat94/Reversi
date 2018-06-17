@@ -45,7 +45,7 @@
             </Pane>
          </bottom>
          <center>
-            <Pane prefHeight="200.0" prefWidth="200.0" style="-fx-background-color: #8fbc8f;" BorderPane.alignment="CENTER">
+            <Pane prefHeight="200.0" prefWidth="200.0" style="-fx-background-color: lightgrey;" BorderPane.alignment="CENTER">
                <children>
                   <ImageView fitHeight="39.0" fitWidth="52.0" layoutX="14.0" layoutY="11.0" pickOnBounds="true" preserveRatio="true">
                      <image>

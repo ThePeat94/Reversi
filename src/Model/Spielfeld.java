@@ -56,7 +56,7 @@ public class Spielfeld {
 
         Vektor[] pruefendeFelder = new Vektor[8];
 
-        for(int i = 1; i < groesse - 2; i++)
+        for(int i = 1; i < groesse; i++)
         {
             // Oben Links
             pruefendeFelder[0] = new Vektor(zielSpalte - i, zielZeile - i);
@@ -174,14 +174,6 @@ public class Spielfeld {
 
     public boolean setzeStein(Spieler spieler, Vektor vektor, boolean steinSollGesetztWerden) throws GameRuleException
     {
-
-        /**
-         * Prüfen, ob der Stein andere Steine umschließt
-         * DIAGONAL
-         * VERTIKAL
-         * HORIZONTAL
-         */
-
         int setzendeZeile = vektor.getY();
         int setzendeSpalte = vektor.getX();
 
@@ -442,6 +434,8 @@ public class Spielfeld {
 
         spieler1.setAnzSteine(2);
         spieler2.setAnzSteine(2);
+
+        freieFelder -= 4;
 
     }
 
