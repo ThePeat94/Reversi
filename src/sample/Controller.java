@@ -23,7 +23,11 @@ import java.util.ArrayList;
 import java.util.InputMismatchException;
 import java.util.Optional;
 
-
+/**
+ * Der Controller für das UI
+ * @author Hendrik Rakemann
+ *
+ */
 public class Controller {
 
     /**
@@ -153,6 +157,24 @@ public class Controller {
 
         gpSpielFeld.setPrefWidth(GRID_WIDTH);
         gpSpielFeld.setPrefHeight(GRID_HEIGHT);
+
+        dpMain.setCenter(gpSpielFeld);
+        EventHandler<MouseEvent> clickHandler = new EventHandler<MouseEvent>() {
+            @Override
+            public void handle(MouseEvent event) {
+                if(!gameFinished)
+                {
+                    Vektor gridZiel = new Vektor((int) event.getX(), (int) event.getY());
+                    aktiverSpielerSetztStein(gridZiel);
+                    checkSpielStatus();
+                }
+                else
+                {
+                    lbStatusText.setText("Das Spiel ist vorbei. Es können keine weiteren Steine gesetzt werden.");
+                }
+            }
+        };
+        gpSpielFeld.setOnMouseClicked(clickHandler);
 
         startNewGame();
     }
@@ -383,7 +405,7 @@ public class Controller {
     }
 
     /**
-     * 
+     * Rendert das intern gehaltene Spielfeld auf das UI
      */
     private void renderSpielFeld()
     {
@@ -397,15 +419,17 @@ public class Controller {
             Feld[] reihe = felder[i];
             for(int j = 0; j < reihe.length; j++)
             {
-                ImageView iv = new ImageView();
-                iv.setImage(feldImage);
-                iv.setFitHeight(feldHoehe);
-                iv.setFitWidth(feldWeite);
+                ImageView ivFeld = new ImageView();
+                ivFeld.setImage(feldImage);
+                ivFeld.setFitHeight(feldHoehe);
+                ivFeld.setFitWidth(feldWeite);
 
-                gpSpielFeld.add(iv, j, i);
+                //Füge ein Feld an der j-Spalte in der i-Zeile hinzu
+                gpSpielFeld.add(ivFeld, j, i);
 
                 ImageView ivBesitzer = null;
 
+                // Besitzer des aktuellen Feldes
                 if(reihe[j].getBesitzer() == spieler1)
                 {
                     ivBesitzer = new ImageView();
@@ -424,10 +448,13 @@ public class Controller {
                     gpSpielFeld.add(ivBesitzer, j, i);
                 }
             }
+
+            // Labels aktualisieren
             lbSpieler1Steine.setText(String.valueOf(spieler1.getAnzSteine()));
             lbSpieler2Steine.setText(String.valueOf(spieler2.getAnzSteine()));
         }
 
+        // Verfügbare Felder für den aktiven Spieler darstellen
         for(Vektor verfuegbar : verfuegbareFelder)
         {
             ImageView ivVerfuegbar = new ImageView();
@@ -437,31 +464,18 @@ public class Controller {
             gpSpielFeld.add(ivVerfuegbar, verfuegbar.getX(), verfuegbar.getY());
 
         }
-
-        dpMain.setCenter(gpSpielFeld);
-        EventHandler<MouseEvent> clickHandler = new EventHandler<MouseEvent>() {
-            @Override
-            public void handle(MouseEvent event) {
-                if(!gameFinished)
-                {
-                    Vektor gridZiel = new Vektor((int) event.getX(), (int) event.getY());
-                    aktiverSpielerSetztStein(gridZiel);
-                    checkSpielStatus();
-                }
-                else
-                {
-                    lbStatusText.setText("Das Spiel ist vorbei. Es können keine weiteren Steine gesetzt werden.");
-                }
-            }
-        };
-        gpSpielFeld.setOnMouseClicked(clickHandler);
     }
 
+    /**
+     * Fragt den Benutzer nach der Größe des Spielfeldes ab (min. 6, max. 10)
+     * @return Die Größe des Spielfeldes
+     */
     private int spielfeldGroesseInput()
     {
         int n = 0;
         boolean erneutAuffordern = true;
 
+        // Benutzer solange auffordern bis eine gültige Zahl angegeben wurde oder der Benutzer den Dialog abbricht
         while(erneutAuffordern)
         {
             Optional<String> result = inputDialog("Spielfeld initialisieren", "Geben Sie die Größe des Spielfeldes an. Mindestens 6, maximal 10!", "Größe: ");
@@ -486,6 +500,7 @@ public class Controller {
             }
             else
             {
+                // Benutzer bricht Dialog ab
                 System.exit(0);
             }
 
@@ -494,6 +509,13 @@ public class Controller {
         return n;
     }
 
+    /**
+     * Stellt eine MessageBox dar
+     * @param alertType Art der Messagebox (Hinweis, Error, ...)
+     * @param title Der Titel der Messagebox
+     * @param headerText Der Kopftext
+     * @param contentText Der Inhalt
+     */
     private void displayMessage(Alert.AlertType alertType, String title, String headerText, String contentText)
     {
         Alert alert = new Alert(alertType);

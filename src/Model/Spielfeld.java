@@ -3,18 +3,24 @@ package Model;
 import Utils.GameRuleException;
 import Utils.Vektor;
 
+/**
+ * Repräsentiert ein Spielfeld
+ */
 public class Spielfeld {
 
-
-
-    public void setSpielFeld(Feld[][] spielFeld) {
-        this.spielFeld = spielFeld;
-    }
-
+    /**
+     * Das Spielfeld an sich
+     */
     private Feld[][] spielFeld;
 
-
+    /**
+     * Die Anzahl der freien Felder
+     */
     private int freieFelder;
+
+    /**
+     * Die Größe des Spielfelds (groesse x groesse)
+     */
     private int groesse;
 
     public Spielfeld(int n)
@@ -34,7 +40,12 @@ public class Spielfeld {
     }
 
 
-
+    /**
+     * Erfasst die begrenzenden Steine des Spielers für ein Zielfeld
+     * @param spieler Der Spieler, für den die Steine erfasst werden sollen
+     * @param zielFeld Das Feld, wo ein neuer Stein gesetzt werden soll
+     * @return Ein Array mit allen begrenzenden Steinen in horizontaler (links, rechts), vertikaler (oben, unten) und diagonaler Richtung
+     */
     private Vektor[][] erfasseBegrenzendeSteine(Spieler spieler, Vektor zielFeld)
     {
         Vektor[][] ergebnis = new Vektor[3][];
@@ -458,7 +469,7 @@ public class Spielfeld {
             for(Feld feld : zeile)
             {
                 if(feld.getBesitzer() != null)
-                    rowContent += feld.getBesitzer().getValue() + "\t";
+                    rowContent += feld.getBesitzer().getSteinZeichen() + "\t";
                 else
                     rowContent += "O\t";
             }
@@ -474,6 +485,10 @@ public class Spielfeld {
 
     public int getGroesse() {
         return groesse;
+    }
+
+    public void setSpielFeld(Feld[][] spielFeld) {
+        this.spielFeld = spielFeld;
     }
 
 
