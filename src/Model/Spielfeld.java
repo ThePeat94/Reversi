@@ -31,10 +31,18 @@ public class Spielfeld {
     }
 
 
+    /**
+     * Getter für die Anzahl der freien Felder
+     * @return Anzahl freier Felder
+     */
     public int getFreieFelder() {
         return freieFelder;
     }
 
+    /**
+     * Getter für das Spielfeld
+     * @return Ein zweidimensionales Array, welches das Spielfeld darstellt
+     */
     public Feld[][] getSpielFeld() {
         return spielFeld;
     }
@@ -44,7 +52,10 @@ public class Spielfeld {
      * Erfasst die begrenzenden Steine des Spielers für ein Zielfeld
      * @param spieler Der Spieler, für den die Steine erfasst werden sollen
      * @param zielFeld Das Feld, wo ein neuer Stein gesetzt werden soll
-     * @return Ein Array mit allen begrenzenden Steinen in horizontaler (links, rechts), vertikaler (oben, unten) und diagonaler Richtung
+     * @return Ein Array mit allen begrenzenden Steinen. Die Begrenzer sind wie folgt: <br>
+     * [0] Horizontal, [0][0] links, [0][1] rechts <br>
+     * [1] Vertikal, [1][0] oben, [1][1] unten <br>
+     * [2] Diagonal, [2][0] oben links, [2][1] oben rechts [2][2] unten rechts, [2][3] unten links
      */
     private Vektor[][] erfasseBegrenzendeSteine(Spieler spieler, Vektor zielFeld)
     {
@@ -65,6 +76,7 @@ public class Spielfeld {
         int zielZeile = zielFeld.getY();
         int zielSpalte = zielFeld.getX();
 
+        // 8 Felder müssen immer geprüft werden
         Vektor[] pruefendeFelder = new Vektor[8];
 
         for(int i = 1; i < groesse; i++)
@@ -97,17 +109,21 @@ public class Spielfeld {
             {
                 Vektor aktuellerVektor = pruefendeFelder[j];
 
+                // Ist der Vektor überhaupt noch im Spielfeld?
                 if(aktuellerVektor.getY() < 0 || aktuellerVektor.getX() < 0 || aktuellerVektor.getY() >= groesse || aktuellerVektor.getX() >= groesse)
                     continue;
 
                 Feld pruefendesFeld = getFeldByVektor(aktuellerVektor);
 
+                // Welches Feld wurde geprüft?
                 // Stein in Richtung schräg oben links
                 if(j == 0)
                 {
+                    // Wenn kein Begrenzer gefunden wurde und das aktuelle Feld keinen Besitzer hat, so ist das Zielfeld der Begrenzer
                     if(ergebnis[2][0] == null && pruefendesFeld.getBesitzer() == null)
                         ergebnis[2][0] = zielFeld;
 
+                    // Wenn der Begrenzer dieser Richtung noch nicht gefunden wurde und der Besitzer des Felds der Spieler ist, so ist dies der Begrenzer
                     if(ergebnis[2][0] == null && pruefendesFeld.getBesitzer() == spieler)
                         ergebnis[2][0] = aktuellerVektor;
                 }
@@ -174,23 +190,29 @@ public class Spielfeld {
                     if(ergebnis[0][0] == null && pruefendesFeld.getBesitzer() == spieler)
                         ergebnis[0][0] = aktuellerVektor;
                 }
-
-
-
             }
         }
 
         return ergebnis;
     }
 
+    /**
+     * Setzt einen Stein für einen Spieler an einem gegebenem Vektor
+     * @param spieler Der Spieler, für den gesetzt werden soll
+     * @param vektor Das Zielfeld
+     * @param steinSollGesetztWerden Soll der Stein wirklich gesetzt werden, oder wird nur zu Berechnungszwecken simuliert?
+     * @return true, wenn der Stein gesetzt wurde, false wenn nicht
+     * @throws GameRuleException Sollte eine Spielregel verletzt worden sein, so wird diese Exception geworfen
+     */
     public boolean setzeStein(Spieler spieler, Vektor vektor, boolean steinSollGesetztWerden) throws GameRuleException
     {
         int setzendeZeile = vektor.getY();
         int setzendeSpalte = vektor.getX();
 
         // Feld ist leer
-        if(spielFeld[setzendeZeile][setzendeSpalte].getBesitzer() == null )
+        if(getFeldByVektor(vektor).getBesitzer() == null )
         {
+            // Liegt der Stein an einem gegnerischen Stein an?
             if(neuerSteinLiegtAnGegner(spieler, vektor))
             {
                 // [0] Horizontale Begrenzer
@@ -202,7 +224,8 @@ public class Spielfeld {
                 Vektor[][] begrenzendeSteine = erfasseBegrenzendeSteine(spieler, vektor);
                 begrenzendeSteine = fuelleBegrenzerAuf(vektor, begrenzendeSteine);
 
-                if(pruefeDistanz(vektor, begrenzendeSteine))
+                // Umschließen die Steine gegnerische Steine?
+                if(begrenzerUmschliessenGegner(vektor, begrenzendeSteine))
                 {
                     // Stein soll nicht gesetzt werden, wenn die Methode genutzt wird,
                     // um zu prüfen, ob der Spieler irgendwo setzen kann
@@ -219,6 +242,7 @@ public class Spielfeld {
                 }
                 else
                 {
+                    // Nur eine Exception werfen, wenn der Stein wirklich gesetzt werden soll
                     if(steinSollGesetztWerden)
                     {
                         throw new GameRuleException("Durch das Setzen dieses Steines wird kein gegnerischer Stein durch eigene eingeschlossen.");
@@ -228,10 +252,10 @@ public class Spielfeld {
                         return false;
                     }
                 }
-
             }
             else
             {
+                // Nur eine Exception werfen, wenn der Stein wirklich gesetzt werden soll
                 if(steinSollGesetztWerden)
                 {
                     throw new GameRuleException("Hier kann kein Stein platziert werden, da er an keinen gegnerischen Stein angrenzt!");
@@ -240,11 +264,11 @@ public class Spielfeld {
                 {
                     return false;
                 }
-
             }
         }
         else
         {
+            // Nur eine Exception werfen, wenn der Stein wirklich gesetzt werden soll
             if(steinSollGesetztWerden)
             {
                 throw new GameRuleException("Dieses Feld ist bereits belegt.");
@@ -256,7 +280,13 @@ public class Spielfeld {
         }
     }
 
-    private boolean pruefeDistanz(Vektor ziel, Vektor[][] begrenzendeSteine)
+    /**
+     * Prüft, ob gegebene Begrenzer und das Zielfeld gegnerische Steine umschließen (Distanz zwischen Ziel und Begrenzer ist dann >= 2 Felder)
+     * @param ziel Das Zielfeld, wo gesetzt werden soll
+     * @param begrenzendeSteine Die gefundenen begrenzenden Steine
+     * @return true, wenn Gegner duch das Ziel und die Begrenzer umschlossen werden, false wenn nicht
+     */
+    private boolean begrenzerUmschliessenGegner(Vektor ziel, Vektor[][] begrenzendeSteine)
     {
         for(Vektor[] richtung : begrenzendeSteine)
         {
@@ -270,6 +300,12 @@ public class Spielfeld {
         return false;
     }
 
+    /**
+     * Wenn ein Begrenzer für eine Richtung nicht vorhanden ist, so gibt es hier keinen => Auffüllen mit dem Zielfeld
+     * @param zielVektor Das Zielfeld
+     * @param begrenzer Die Begrenzersteine
+     * @return Das aufgefüllte Begrenzerarray
+     */
     private Vektor[][] fuelleBegrenzerAuf(Vektor zielVektor, Vektor[][] begrenzer)
     {
         Vektor[][] result = begrenzer;
@@ -284,6 +320,11 @@ public class Spielfeld {
         return result;
     }
 
+    /**
+     * Dreht alle Steine zwischen den Begrenzern auf horizontaler Ebene um
+     * @param neuerBesitzer Der neue Besitzer des Felds
+     * @param begrenzer Die Begrenzer für die horizontale
+     */
     private void dreheSteineAufHorizontalerAchseUm(Spieler neuerBesitzer, Vektor[] begrenzer)
     {
         // Horizontale Begrenzer
@@ -306,6 +347,11 @@ public class Spielfeld {
         }
     }
 
+    /**
+     * Dreht alle Steine zwischen den Begrenzern auf vertikaler Ebene um
+     * @param neuerBesitzer Der neue Besitzer des Felds
+     * @param begrenzer Die Begrenzer für die vertikale
+     */
     private void dreheSteineAufVertikalerchseUm(Spieler neuerBesitzer, Vektor[] begrenzer)
     {
         // [1] Vertikale Begrenzer
@@ -327,7 +373,11 @@ public class Spielfeld {
         }
     }
 
-
+    /**
+     * Dreht alle Steine zwischen den Begrenzern auf diagonaler Ebene um
+     * @param neuerBesitzer Der neue Besitzer
+     * @param begrenzer Die Begrenzer auf der diagonalen
+     */
     private void dreheSteineAufDiagonalerchseUm(Spieler neuerBesitzer, Vektor[] begrenzer)
     {
         // [2]Diagonale Begrenzer
@@ -371,7 +421,7 @@ public class Spielfeld {
     }
 
     /**
-     * Prüft, pb der zu setzende Stein an einen gegnerischen Stein angrenzt
+     * Prüft, ob der zu setzende Stein an einen gegnerischen Stein angrenzt
      * @param spieler Der Spieler, welcher am Zug ist
      * @param vektor Das Zielfeld
      * @return true, wenn ein gegnerischer Stein anliegt, false, wenn nicht
@@ -426,6 +476,11 @@ public class Spielfeld {
         return false;
     }
 
+    /**
+     * Initialisiert das Spielfeld => Mittig die Steine der Spieler, rest leer
+     * @param spieler1
+     * @param spieler2
+     */
     public void initialisiereFeld(Spieler spieler1, Spieler spieler2)
     {
         for(int i = 0; i < spielFeld.length; i++)
@@ -450,6 +505,9 @@ public class Spielfeld {
 
     }
 
+    /**
+     * Konsolenausgabe des Spielfelds
+     */
     public void output()
     {
 
@@ -478,18 +536,21 @@ public class Spielfeld {
         }
     }
 
+    /**
+     * Greift ein Feld nach einem Vektor ab
+     * @param ziel
+     * @return
+     */
     private Feld getFeldByVektor(Vektor ziel)
     {
         return spielFeld[ziel.getY()][ziel.getX()];
     }
 
+    /**
+     * Getter für die Größe des Felds
+     * @return Größe des Spielfelds
+     */
     public int getGroesse() {
         return groesse;
     }
-
-    public void setSpielFeld(Feld[][] spielFeld) {
-        this.spielFeld = spielFeld;
-    }
-
-
 }

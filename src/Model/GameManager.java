@@ -5,6 +5,9 @@ import Utils.Vektor;
 
 import java.util.Scanner;
 
+/**
+ * Über diese Klasse kann Reversi in der Konsole gespielt werden
+ */
 public class GameManager {
     private Spieler spieler1, spieler2, neutral;
     private Spielfeld spielFeld;
@@ -17,7 +20,7 @@ public class GameManager {
         spieler2 = new Spieler('R');
     }
 
-    public void StartNewGame(int n)
+    public void startNewGame(int n)
     {
         System.out.println("Name des 1. Spielers: ");
         String name = in.nextLine();

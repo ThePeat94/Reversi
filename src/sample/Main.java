@@ -15,18 +15,16 @@ public class Main extends Application {
 
     @Override
     public void start(Stage primaryStage) throws Exception{
+
+        // Konsolenprogramm
         //GameManager gm = new GameManager();
-
-
         //System.out.println("Geben sie die Groesse des Spielfelds an!");
-
         //int n = getNumberInput(6, 10);
-
-        //gm.StartNewGame(n);
+        //gm.startNewGame(n);
 
 
         Parent root = FXMLLoader.load(getClass().getResource("sample.fxml"));
-        primaryStage.setTitle("Hello World");
+        primaryStage.setTitle("Reversi");
         primaryStage.setScene(new Scene(root));
         primaryStage.setMinHeight(900);
         primaryStage.setMinWidth(800);
