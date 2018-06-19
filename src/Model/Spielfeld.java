@@ -510,27 +510,28 @@ public class Spielfeld {
     public void output()
     {
 
-        String tHead = "";
+        StringBuilder sbHead = new StringBuilder();
         for(int i = 0; i < groesse; i++)
         {
-            tHead += "\t" + String.valueOf(i);
+            sbHead.append(String.format("\t%s", i));
         }
 
-        System.out.println(tHead);
+        System.out.println(sbHead.toString());
 
         int row = 0;
 
         for(Feld[] zeile : spielFeld)
         {
-            String rowContent = String.valueOf(row) + "\t";
+            StringBuilder sbRowContent = new StringBuilder();
+            sbRowContent.append(String.format("%s\t", row));
             for(Feld feld : zeile)
             {
                 if(feld.getBesitzer() != null)
-                    rowContent += feld.getBesitzer().getSteinZeichen() + "\t";
+                    sbRowContent.append(String.format("%s\t", feld.getBesitzer().getSteinZeichen()));
                 else
-                    rowContent += "O\t";
+                    sbRowContent.append("O\t");
             }
-            System.out.println(rowContent);
+            System.out.println(sbRowContent);
             row++;
         }
     }

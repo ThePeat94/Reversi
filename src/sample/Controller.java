@@ -433,7 +433,8 @@ public class Controller {
        }
        catch(GameRuleException gEx)
        {
-
+            // Sollte eine Spielregel hier verletzt werden, ist es egal. Es wird lediglich kalkuliert, wo Steine ge-
+            // setzt werden können.
        }
 
        return ergebnis;
@@ -445,7 +446,6 @@ public class Controller {
     private void renderSpielFeld()
     {
         Feld[][] felder = spielFeld.getSpielFeld();
-
 
         ArrayList<Vektor> verfuegbareFelder = ermittleVerfuegbareFelderFuerSpieler(aktiverSpieler);
 
