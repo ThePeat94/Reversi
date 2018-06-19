@@ -79,6 +79,7 @@ public class Spielfeld {
         // 8 Felder müssen immer geprüft werden
         Vektor[] pruefendeFelder = new Vektor[8];
 
+        // Bei 1 beginnen, da wir Felder ausgehend vom Ziel betrachten
         for(int i = 1; i < groesse; i++)
         {
             // Oben Links
@@ -219,7 +220,7 @@ public class Spielfeld {
                 // 0 = Links, 1 = rechts
                 // [1] Vertikale Begrenzer
                 // 0 = oben, 1 = unten
-                // [2]Diagonale Begrenzer
+                // [2] Diagonale Begrenzer
                 // 0 = oben links, 1 = oben rechts, 2 = unten rechts, 3 = unten links
                 Vektor[][] begrenzendeSteine = erfasseBegrenzendeSteine(spieler, vektor);
                 begrenzendeSteine = fuelleBegrenzerAuf(vektor, begrenzendeSteine);
@@ -337,6 +338,8 @@ public class Spielfeld {
         for(int spalte = links.getX(); spalte < rechts.getX(); spalte++)
         {
             Spieler aktuellerBesitzer = spielFeld[zeile][spalte].getBesitzer();
+
+            // Umdrehen und Anzahl Steine anpassen
             if(aktuellerBesitzer != null && aktuellerBesitzer != neuerBesitzer)
             {
                 aktuellerBesitzer.setAnzSteine(aktuellerBesitzer.getAnzSteine() - 1);
@@ -364,6 +367,8 @@ public class Spielfeld {
         for(int zeile = oben.getY(); zeile < unten.getY(); zeile++)
         {
             Spieler aktuellerBesitzer = spielFeld[zeile][spalte].getBesitzer();
+
+            // Umdrehen und Anzahl Steine anpassen
             if(aktuellerBesitzer != null && aktuellerBesitzer != neuerBesitzer)
             {
                 aktuellerBesitzer.setAnzSteine(aktuellerBesitzer.getAnzSteine() - 1);
@@ -395,6 +400,7 @@ public class Spielfeld {
         {
             Spieler aktuellerBesitzer = spielFeld[obenLinks.getY() + i][obenLinks.getX() + i].getBesitzer();
 
+            // Umdrehen und Anzahl Steine anpassen
             if(aktuellerBesitzer != null && aktuellerBesitzer != neuerBesitzer)
             {
                 aktuellerBesitzer.setAnzSteine(aktuellerBesitzer.getAnzSteine() - 1);
@@ -403,14 +409,14 @@ public class Spielfeld {
             }
         }
 
-        // von unten links nach oben rechts
-
         // von links unten nach rechts oben
         schritte = obenRechts.getX() - untenLinks.getX();
 
         for(int i = 0; i < schritte; i++)
         {
             Spieler aktuellerBesitzer = spielFeld[untenLinks.getY() - i][untenLinks.getX() + i].getBesitzer();
+
+            // Umdrehen und Anzahl Steine anpassen
             if(aktuellerBesitzer != null && aktuellerBesitzer != neuerBesitzer)
             {
                 aktuellerBesitzer.setAnzSteine(aktuellerBesitzer.getAnzSteine() - 1);
@@ -459,6 +465,7 @@ public class Spielfeld {
 
         for(Vektor aktuellerVektor : pruefendeFelder)
         {
+            // Ist der Vektor noch im Spielfeld?
             if(aktuellerVektor.getY() < 0 || aktuellerVektor.getX() < 0 || aktuellerVektor.getY() >= groesse || aktuellerVektor.getX() >= groesse)
                 continue;
 
@@ -492,6 +499,7 @@ public class Spielfeld {
 
         int mitte = groesse/2;
 
+        // Steine in Mitte des Feldes setzen
         spielFeld[mitte][mitte].setBesitzer(spieler1);
         spielFeld[mitte-1][mitte-1].setBesitzer(spieler1);
         spielFeld[mitte-1][mitte].setBesitzer(spieler2);
