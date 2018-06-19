@@ -65,6 +65,16 @@ public class Controller {
      */
     public Label lbSpieler2Name;
 
+    /**
+     * Darstellung des Steins für Spieler 1 im unteren Bereich
+     */
+    public ImageView ivSpieler1Stein;
+
+    /**
+     * Darstellung des Steins für Spieler 2 im unteren Bereich
+     */
+    public ImageView ivSpieler2Stein;
+
 
     /**
      * Das darzustellende Bild für ein leeres Feld
@@ -107,13 +117,13 @@ public class Controller {
     private Spieler aktiverSpieler;
 
     /**
-     * Die berechnete Weite in Pixel eines Felds ({@see GRID_WIDTH}/{@see Spielfeld.groesse})
+     * Die berechnete Weite in Pixel eines Felds ({@link #GRID_WIDTH}/{@link Model.Spielfeld#groesse})
      * Relevant für die Darstellung des hinterlegten Bildes
      */
     private double feldWeite;
 
     /**
-     * Die berechnete Hähe in Pixel eines Felds ({@see GRID_HEIGHT}/{@see Spielfeld.groesse})
+     * Die berechnete Hähe in Pixel eines Felds ({@link #GRID_HEIGHT}/{@link Model.Spielfeld#groesse})
      * Relevant für die Darstellung des hinterlegten Bildes
      */
     private double feldHoehe;
@@ -148,39 +158,14 @@ public class Controller {
      */
     public void initialize()
     {
-        gpSpielFeld= new GridPane();
-        gpSpielFeld.setMinHeight(GRID_HEIGHT);
-        gpSpielFeld.setMaxHeight(GRID_HEIGHT);
-
-        gpSpielFeld.setMinWidth(GRID_WIDTH);
-        gpSpielFeld.setMaxWidth(GRID_WIDTH);
-
-        gpSpielFeld.setPrefWidth(GRID_WIDTH);
-        gpSpielFeld.setPrefHeight(GRID_HEIGHT);
-
-        dpMain.setCenter(gpSpielFeld);
-        EventHandler<MouseEvent> clickHandler = new EventHandler<MouseEvent>() {
-            @Override
-            public void handle(MouseEvent event) {
-                if(!gameFinished)
-                {
-                    Vektor gridZiel = new Vektor((int) event.getX(), (int) event.getY());
-                    aktiverSpielerSetztStein(gridZiel);
-                    checkSpielStatus();
-                }
-                else
-                {
-                    lbStatusText.setText("Das Spiel ist vorbei. Es können keine weiteren Steine gesetzt werden.");
-                }
-            }
-        };
-        gpSpielFeld.setOnMouseClicked(clickHandler);
+        ivSpieler1Stein.setImage(weissImage);
+        ivSpieler2Stein.setImage(schwarzImage);
 
         startNewGame();
     }
 
     /**
-     * Startet ein neues Spiel. Dazu werden die Spielfeldgröße ({@see spielfeldGroesseInput}) und die Spielernamen erfasst({@see erfasseSpielerName}). Anschließend wird das GridPane initialisiert und gerendert ({@see renderSpielfeld}).
+     * Startet ein neues Spiel. Dazu werden die Spielfeldgröße ({@link #spielfeldGroesseInput()}) und die Spielernamen erfasst({@link  #erfasseSpielerName(Spieler, int)}). Anschließend wird das GridPane initialisiert und gerendert ({@link #renderSpielFeld()}).
      */
     public void startNewGame()
     {
@@ -207,6 +192,36 @@ public class Controller {
         aktiverSpieler = spieler1;
         lbSpieler1Name.setStyle(ACTIVE_STYLE);
         lbSpieler2Name.setStyle(INACTIVE_STYLE);
+
+        gpSpielFeld= new GridPane();
+        gpSpielFeld.setMinHeight(GRID_HEIGHT);
+        gpSpielFeld.setMaxHeight(GRID_HEIGHT);
+
+        gpSpielFeld.setMinWidth(GRID_WIDTH);
+        gpSpielFeld.setMaxWidth(GRID_WIDTH);
+
+        gpSpielFeld.setPrefWidth(GRID_WIDTH);
+        gpSpielFeld.setPrefHeight(GRID_HEIGHT);
+
+        dpMain.setCenter(gpSpielFeld);
+        EventHandler<MouseEvent> clickHandler = new EventHandler<MouseEvent>() {
+            @Override
+            public void handle(MouseEvent event) {
+                if(!gameFinished)
+                {
+                    Vektor gridZiel = new Vektor((int) event.getX(), (int) event.getY());
+                    aktiverSpielerSetztStein(gridZiel);
+                    checkSpielStatus();
+                    renderSpielFeld();
+                }
+                else
+                {
+                    lbStatusText.setText("Das Spiel ist vorbei. Es können keine weiteren Steine gesetzt werden.");
+                }
+            }
+        };
+        gpSpielFeld.setOnMouseClicked(clickHandler);
+
         renderSpielFeld();
 
     }
@@ -231,7 +246,7 @@ public class Controller {
             else
                 System.exit(0);
 
-        }while(spielerName.isEmpty());
+        } while(spielerName.isEmpty());
 
         zielSpieler.setName(spielerName);
     }
@@ -305,7 +320,6 @@ public class Controller {
                     lbSpieler1Name.setStyle(ACTIVE_STYLE);
                     lbSpieler2Name.setStyle(INACTIVE_STYLE);
                 }
-                renderSpielFeld();
             }
         }
         catch(GameRuleException gEx)
@@ -324,46 +338,67 @@ public class Controller {
         // Das Spielfeld ist voll
         if(spielFeld.getFreieFelder() == 0)
         {
-            // Wer hat nun mehr Steine?
-            if(spieler1.getAnzSteine() > spieler2.getAnzSteine())
-                sieger = spieler1;
-            if(spieler2.getAnzSteine() > spieler1.getAnzSteine())
-                sieger = spieler2;
-
-            // Infos für den darzustellenden Dialog
-            Alert.AlertType at = Alert.AlertType.INFORMATION;
-            String title = "Spielende";
-            String headerText = "Alle Felder sind belegt.";
-            String contentText;
-
-            // Wenn es keinen Sieger gab => unentschieden
-            if(sieger != null)
-            {
-               contentText = String.format("%s hat gewonnen.", sieger.getName());
-            }
-            else
-            {
-                contentText = "Unentschieden, beide Spieler haben gleich viel Steine auf dem Feld!";
-            }
-            displayMessage(at, title, headerText, contentText);
-            gameFinished = true;
-
+            spielEnde();
         }
         else
         {
+            // Der aktuell aktive Spieler kann nicht ziehen
             if(ermittleVerfuegbareFelderFuerSpieler(aktiverSpieler).size() == 0)
             {
-                gameFinished = true;
+                Spieler inaktiverSpieler = null;
 
                 if(spieler1 == aktiverSpieler)
-                    sieger = spieler2;
+                {
+                    inaktiverSpieler = spieler2;
+                }
 
                 if(spieler2 == aktiverSpieler)
-                    sieger = spieler1;
+                {
+                    inaktiverSpieler = spieler1;
+                }
 
-                displayMessage(Alert.AlertType.INFORMATION, "Spielende", String.format("%s kann nicht mehr setzen.", aktiverSpieler.getName()), sieger.getName() + " hat gewonnen.");
+                if(ermittleVerfuegbareFelderFuerSpieler(inaktiverSpieler).size() == 0)
+                {
+                    spielEnde();
+                }
+                else
+                {
+                    displayMessage(Alert.AlertType.INFORMATION, "Aussetzen", String.format("%s kann nicht setzen.", aktiverSpieler.getName()), String.format("%s ist nun am Zug.", inaktiverSpieler.getName()));
+                    aktiverSpieler = inaktiverSpieler;
+                }
             }
         }
+    }
+
+    /**
+     * Stellt das Spielende dar.
+     */
+    private void spielEnde()
+    {
+        Spieler sieger = null;
+        // Wer hat nun mehr Steine?
+        if(spieler1.getAnzSteine() > spieler2.getAnzSteine())
+            sieger = spieler1;
+        if(spieler2.getAnzSteine() > spieler1.getAnzSteine())
+            sieger = spieler2;
+
+        // Infos für den darzustellenden Dialog
+        Alert.AlertType at = Alert.AlertType.INFORMATION;
+        String title = "Spielende";
+        String headerText = "Alle Felder sind belegt.";
+        String contentText;
+
+        // Wenn es keinen Sieger gab => unentschieden
+        if(sieger != null)
+        {
+            contentText = String.format("%s hat gewonnen.", sieger.getName());
+        }
+        else
+        {
+            contentText = "Unentschieden, beide Spieler haben gleich viel Steine auf dem Feld!";
+        }
+        displayMessage(at, title, headerText, contentText);
+        gameFinished = true;
     }
 
     /**
@@ -523,5 +558,13 @@ public class Controller {
         alert.setHeaderText(headerText);
         alert.setContentText(contentText);
         alert.showAndWait();
+    }
+
+    /**
+     * Beendet das Programm
+     */
+    public void exit()
+    {
+        System.exit(0);
     }
 }

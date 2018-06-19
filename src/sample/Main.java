@@ -5,6 +5,7 @@ import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.image.Image;
 import javafx.stage.Stage;
 
 import java.util.Scanner;
@@ -25,6 +26,7 @@ public class Main extends Application {
 
         Parent root = FXMLLoader.load(getClass().getResource("sample.fxml"));
         primaryStage.setTitle("Reversi");
+        primaryStage.getIcons().add(new Image("file:.\\Resources\\icon.png"));
         primaryStage.setScene(new Scene(root));
         primaryStage.setMinHeight(900);
         primaryStage.setMinWidth(800);

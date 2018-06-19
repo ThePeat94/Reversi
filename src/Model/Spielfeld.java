@@ -472,14 +472,13 @@ public class Spielfeld {
                 return true;
             }
         }
-
         return false;
     }
 
     /**
      * Initialisiert das Spielfeld => Mittig die Steine der Spieler, rest leer
-     * @param spieler1
-     * @param spieler2
+     * @param spieler1 1. Spieler
+     * @param spieler2 2. Spieler
      */
     public void initialisiereFeld(Spieler spieler1, Spieler spieler2)
     {
@@ -538,8 +537,8 @@ public class Spielfeld {
 
     /**
      * Greift ein Feld nach einem Vektor ab
-     * @param ziel
-     * @return
+     * @param ziel Das Zielfeld
+     * @return Das Feld bei gegebenem Vektor
      */
     private Feld getFeldByVektor(Vektor ziel)
     {
